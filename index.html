@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Работа с API Django</title>
+</head>
+<body>
+    <h1>Список авторов</h1>
+    <ul id="authorList"></ul>
+
+    <h2>Добавить нового автора</h2>
+    <form id="authorForm">
+        <input type="text" id="authorName" placeholder="Имя автора" required>
+        <textarea id="authorBio" placeholder="Биография" required></textarea>
+        <button type="submit">Добавить автора</button>
+    </form>
+
+    <h2>Обновить автора</h2>
+    <form id="updateAuthorForm">
+        <input type="number" id="updateAuthorId" placeholder="ID автора" required>
+        <input type="text" id="updateAuthorName" placeholder="Новое имя автора" required>
+        <textarea id="updateAuthorBio" placeholder="Новая биография" required></textarea>
+        <button type="submit">Обновить автора</button>
+    </form>
+
+    <h2>Удалить автора</h2>
+    <form id="deleteAuthorForm">
+        <input type="number" id="deleteAuthorId" placeholder="ID автора" required>
+        <button type="submit">Удалить автора</button>
+    </form>
+
+    <script>
+        // Функция для получения списка авторов
+        function fetchAuthors() {
+            fetch('http://127.0.0.1:8000/api/authors/')
+                .then(response => response.json())
+                .then(data => {
+                    const authorList = document.getElementById('authorList');
+                    authorList.innerHTML = ''; // Очищаем список перед добавлением новых элементов
+
+                    data.forEach(author => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `${author.name} - ${author.bio}`;
+                        authorList.appendChild(listItem);
+                    });
+                })
+                .catch(error => console.error('Ошибка при получении авторов:', error));
+        }
+
+        // Вызов функции для загрузки авторов при загрузке страницы
+        fetchAuthors();
+
+        // Форма для добавления нового автора
+        document.getElementById('authorForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Предотвращаем стандартное поведение формы
+
+            const name = document.getElementById('authorName').value;
+            const bio = document.getElementById('authorBio').value;
+
+            fetch('http://127.0.0.1:8000/api/authors/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    bio: bio
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Автор добавлен:', data);
+                fetchAuthors(); // Обновляем список авторов
+            })
+            .catch(error => console.error('Ошибка при добавлении автора:', error));
+        });
+
+        // Форма для обновления автора
+        document.getElementById('updateAuthorForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('updateAuthorId').value;
+            const name = document.getElementById('updateAuthorName').value;
+            const bio = document.getElementById('updateAuthorBio').value;
+
+            fetch(`http://127.0.0.1:8000/api/authors/${id}/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    bio: bio
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Автор обновлен:', data);
+                fetchAuthors(); // Обновляем список авторов
+            })
+            .catch(error => console.error('Ошибка при обновлении автора:', error));
+        });
+
+        // Форма для удаления автора
+        document.getElementById('deleteAuthorForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('deleteAuthorId').value;
+
+            fetch(`http://127.0.0.1:8000/api/authors/${id}/`, {
+                method: 'DELETE'
+            })
+            .then(() => {
+                console.log('Автор удален');
+                fetchAuthors(); // Обновляем список авторов
+            })
+            .catch(error => console.error('Ошибка при удалении автора:', error));
+        });
+
+        // Автоматическое обновление списка авторов каждые 10 секунд
+        setInterval(fetchAuthors, 10000);
+    </script>
+</body>
+</html>
